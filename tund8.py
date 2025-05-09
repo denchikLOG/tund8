@@ -25,84 +25,62 @@ from tkinter import messagebox
 # sisestus.pack(pady=20,side=LEFT)
 # pilt_label.pack(pady=20)
 import tkinter as tk
-from tkinter import messagebox
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-def solve_quadratic():
+from tkinter import filedialog
+import smtplib
+from email.message import EmailMessage
+import os
+
+def lisa_manus(entry_widget):
+    failitee = filedialog.askopenfilename()
+    if failitee:
+        entry_widget.delete(0, 'end')
+        entry_widget.insert(0, failitee)
+def saada_kiri():
+    saaja = email_entry.get()
+    teema = teema_entry.get()
+    manus = manus_entry.get()
+    sisu = kiri_text.get("1.0", "end")
+    msg = EmailMessage()
+    msg['Subject'] = teema
+    msg['From'] = "deniss.melnikov@gmail.com"
+    msg['To'] = saaja
+    msg.set_content(sisu)
+
+    if manus and os.path.isfile(manus):
+        with open(manus, 'rb') as f:
+            failinimi = os.path.basename(manus)
+            msg.add_attachment(f.read(), maintype='application', subtype='octet-stream', filename=failinimi)
+
     try:
-        a=float(entry_a.get())
-        b=float(entry_b.get())
-        c=float(entry_c.get())
-        if a==0:
-            messagebox.showerror("Ошибка","Коэффициент 'a' не может быть равен 0!")
-            return
-        discriminant=b**2-4*a*c
-        if discriminant>0:
-            x1=(-b+np.sqrt(discriminant))/(2*a)
-            x2=(-b-np.sqrt(discriminant))/(2*a)
-            solution_label.config(text=f"Корни уравнения: x1 = {x1:.2f}, x2 = {x2:.2f}")
-        elif discriminant==0:
-            x=-b/(2*a)
-            solution_label.config(text=f"Единственный корень: x = {x:.2f}")
-        else:
-            solution_label.config(text="Нет действительных корней.")
-    except ValueError:
-        messagebox.showerror("Ошибка ввода","Введите корректные значения для коэффициентов.")
-def plot_graph():
-    try:
-        a=float(entry_a.get())
-        b=float(entry_b.get())
-        c=float(entry_c.get())
-        if a==0:
-            messagebox.showerror("Ошибка","Коэффициент 'a' не может быть равен 0!")
-            return
-        x=np.linspace(-10,10,400)
-        y=a*x**2+b*x+c
-        fig,ax=plt.subplots()
-        ax.plot(x,y,label=f'{a}x² + {b}x + {c}')
-        ax.axhline(0,color='black',linewidth=1)
-        ax.axvline(0,color='black',linewidth=1)
-        ax.legend()
-        canvas=FigureCanvasTkAgg(fig,master=window)
-        canvas.draw()
-        canvas.get_tk_widget().pack()
-    except ValueError:
-        messagebox.showerror("Ошибка ввода","Введите корректные значения для коэффициентов.")
-def check_empty_fields():
-    if not entry_a.get() or not entry_b.get() or not entry_c.get():
-        if not entry_a.get():
-            entry_a.config(bg="red")
-        else:
-            entry_a.config(bg="white")
-        if not entry_b.get():
-            entry_b.config(bg="red")
-        else:
-            entry_b.config(bg="white")
-        if not entry_c.get():
-            entry_c.config(bg="red")
-        else:
-            entry_c.config(bg="white")
-        return False
-    return True
-window=tk.Tk()
-window.title("Решение квадратного уравнения")
-label_a=tk.Label(window,text="a:")
-label_a.pack(padx=10,pady=5)
-entry_a=tk.Entry(window)
-entry_a.pack(padx=10,pady=5)
-label_b=tk.Label(window,text="b:")
-label_b.pack(padx=10,pady=5)
-entry_b=tk.Entry(window)
-entry_b.pack(padx=10,pady=5)
-label_c=tk.Label(window,text="c:")
-label_c.pack(padx=10,pady=5)
-entry_c=tk.Entry(window)
-entry_c.pack(padx=10,pady=5)
-solve_button=tk.Button(window,text="Решить",command=lambda:[check_empty_fields(),solve_quadratic()])
-solve_button.pack(padx=10,pady=10)
-solution_label=tk.Label(window,text="")
-solution_label.pack(padx=10,pady=5)
-plot_button=tk.Button(window,text="График",command=plot_graph)
-plot_button.pack(padx=10,pady=10)
-window.mainloop()
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login("deniss.melnikov@gmail.com", "Neegrit2220")
+            smtp.send_message(msg)
+            print("Kiri saadetud!")
+    except Exception as e:
+        print("Viga saatmisel:", e)
+aken = tk.Tk()
+aken.title("E-kirja saatmine")
+aken.geometry("500x350")
+
+tk.Label(aken, text="EMAIL:", bg="darkgreen", fg="white", width=10).grid(row=0, column=0, sticky='nsew')
+tk.Label(aken, text="TEEMA:", bg="darkgreen", fg="white", width=10).grid(row=1, column=0, sticky='nsew')
+tk.Label(aken, text="LISA:", bg="darkgreen", fg="white", width=10).grid(row=2, column=0, sticky='nsew')
+tk.Label(aken, text="KIRI:", bg="darkgreen", fg="white", width=10).grid(row=3, column=0, sticky='nsew')
+
+email_entry = tk.Entry(aken, width=50)
+teema_entry = tk.Entry(aken, width=50)
+manus_entry = tk.Entry(aken, width=50)
+kiri_text = tk.Text(aken, width=40, height=10)
+
+email_entry.grid(row=0, column=1, padx=5, pady=5)
+teema_entry.grid(row=1, column=1, padx=5, pady=5)
+manus_entry.grid(row=2, column=1, padx=5, pady=5)
+kiri_text.grid(row=3, column=1, padx=5, pady=5)
+
+lisa_btn = tk.Button(aken, text="LISA PILT", bg="darkgreen", fg="white", command=lambda: lisa_manus(manus_entry))
+saada_btn = tk.Button(aken, text="SAADA", bg="darkgreen", fg="white", command=saada_kiri)
+
+lisa_btn.grid(row=4, column=0, pady=10)
+saada_btn.grid(row=4, column=1, sticky='e', padx=10)
+
+aken.mainloop()
