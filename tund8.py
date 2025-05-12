@@ -1,123 +1,107 @@
-﻿from tkinter import *
+import tkinter as tk
 from tkinter import messagebox
-# aken=Tk()
-# aken.title("tund8")
-# aken.geometry("600x400")
-# aken.configure(bg="Lightblue")
-# aken.resizable(width=False,height=False)
-# aken.iconbitmap("")
-# #aken.attributes("-alpha0.9")
-# pealkiri=Label(aken,text="Tere tulemast!\n Tund 8 Tkinter",bg=blue,fg=green,font=("Arial",20))
+import funktsioonid as f
 
-# nupp=Button(aken,text="kliki mind",bg="red",fg="white",font=("Arial",15),command=lambda: messagebox.showinfo("teema 8","Tere tulemast Tkinteri maailma!"))
-# nupp.bind("<Button-3>",vajatud)
+kontaktid = f.loe_kontaktid_failist()
+def kuva_kontaktid():
+    tekstikast.delete("1.0", "end")
+    for kontakt in kontaktid:
+        tekstikast.insert("end", f"{kontakt['nimi']} | {kontakt['telefon']} | {kontakt['email']}\n")
 
-# sisestus=Entry(aken,bg="white",font=("Arial",15), fg="black")
-# sisestus.insert(0,"kirjuta siia tekst")
-# sisestus.bind("<FocusIn>",tuhista)#"<FocusOut>"
-# sisestus.bind("<Return>",text_to_label)
+def lisa_kontakt():
+    nimi = nimi_entry.get()
+    telefon = telefon_entry.get()
+    email = email_entry.get()
+    if nimi and telefon and email:
+        f.lisa_kontakt(kontaktid, nimi, telefon, email)
+        f.salvesta_kontaktid_faili(kontaktid)
+        messagebox.showinfo("Edu", "Kontakt lisatud.")
+        nimi_entry.delete(0, 'end')
+        telefon_entry.delete(0, 'end')
+        email_entry.delete(0, 'end')
+        kuva_kontaktid()
+    else:
+        messagebox.showwarning("Tühjad väljad", "Täida kõik väljad.")
 
-# pilt=PhotoImage(file="coconut.png").subsample(2, 2)
-# pilt_label=Label(aken,image=pilt)
+def otsi_kontakti_gui():
+    nimi = nimi_entry.get()
+    tulemused = f.otsi_kontakt(kontaktid, nimi)
+    if tulemused:
+        kontakt = tulemused[0]
+        otsingu_viide.set(kontakt["nimi"])
 
-# pealkiri.pack(pady=20)
-# nupp.pack(pady=20,side=LEFT)
-# sisestus.pack(pady=20,side=LEFT)
-# pilt_label.pack(pady=20)
-import tkinter as tk
-from tkinter import filedialog
-import smtplib
-from email.message import EmailMessage
-import os
+        nimi_entry.delete(0, 'end')
+        nimi_entry.insert(0, kontakt["nimi"])
+        telefon_entry.delete(0, 'end')
+        telefon_entry.insert(0, kontakt["telefon"])
+        email_entry.delete(0, 'end')
+        email_entry.insert(0, kontakt["email"])
+        tekstikast.delete("1.0", "end")
+        tekstikast.insert("end", f"Leitud: {kontakt['nimi']} | {kontakt['telefon']} | {kontakt['email']}\n")
+    else:
+        messagebox.showinfo("Tulemus puudub", "Kontakti ei leitud.")
 
-def lisa_manus(entry_widget):
-    failitee = filedialog.askopenfilename()
-    if failitee:
-        entry_widget.delete(0, 'end')
-        entry_widget.insert(0, failitee)
-def saada_kiri():
-    saaja = email_entry.get()
-    teema = teema_entry.get()
-    manus = manus_entry.get()
-    sisu = kiri_text.get("1.0", "end")
-    msg = EmailMessage()
-    msg['Subject'] = teema
-    msg['From'] = "deniss.melnikov@gmail.com"
-    msg['To'] = saaja
-    msg.set_content(sisu)
+def kustuta_kontakt_gui():
+    nimi = nimi_entry.get()
+    if f.kustuta_kontakt(kontaktid, nimi):
+        f.salvesta_kontaktid_faili(kontaktid)
+        messagebox.showinfo("Kustutatud", f"'{nimi}' kustutati.")
+        kuva_kontaktid()
+    else:
+        messagebox.showwarning("Ei leitud", "Kontakti ei leitud.")
 
-    if manus and os.path.isfile(manus):
-        with open(manus, 'rb') as f:
-            failinimi = os.path.basename(manus)
-            msg.add_attachment(f.read(), maintype='application', subtype='octet-stream', filename=failinimi)
+def sorteeri_gui():
+    kontaktid_sorted = f.sorteeri_kontaktid(kontaktid, "nimi")
+    tekstikast.delete("1.0", "end")
+    for kontakt in kontaktid_sorted:
+        tekstikast.insert("end", f"{kontakt['nimi']} | {kontakt['telefon']} | {kontakt['email']}\n")
 
-    try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login("deniss.melnikov@gmail.com", "Neegrit2220")
-            smtp.send_message(msg)
-            print("Kiri saadetud!")
-    except Exception as e:
-        print("Viga saatmisel:", e)
-aken=tk.Tk()
-aken.title("E-kirja emaili saatmine")
-aken.geometry("500x325")
-aken.configure(bg="white")
+def muuda_kontakt_gui():
+    vana_nimi = otsingu_viide.get()
+    uus_nimi = nimi_entry.get()
+    uus_telefon = telefon_entry.get()
+    uus_email = email_entry.get()
 
-tk.Label(aken,text="Email:",bg="green",fg="white",width=10).grid(row=0,column=0,sticky='nsew')
-tk.Label(aken,text="Teema:",bg="green",fg="white",width=10).grid(row=1,column=0,sticky='nsew')
-tk.Label(aken,text="Lisa:",bg="green",fg="white",width=10).grid(row=2,column=0,sticky='nsew')
-tk.Label(aken,text="Kiri:",bg="green",fg="white",width=10).grid(row=3,column=0,sticky='nsew')
+    if vana_nimi and uus_nimi and uus_telefon and uus_email:
+        õnnestus = f.muuda_kontakt(kontaktid, vana_nimi, uus_nimi, uus_telefon, uus_email)
+        if õnnestus:
+            f.salvesta_kontaktid_faili(kontaktid)
+            messagebox.showinfo("Muudetud", f"'{vana_nimi}' andmed on muudetud.")
+            kuva_kontaktid()
+        else:
+            messagebox.showwarning("Tõrge", "Kontakti ei leitud muudatuseks.")
+    else:
+        messagebox.showwarning("Puuduvad andmed", "Palun täida kõik väljad.")
 
-email_entry=tk.Entry(aken,width=50)
-teema_entry=tk.Entry(aken,width=50)
-manus_entry=tk.Entry(aken,width=50)
-kiri_text=tk.Text(aken,width=40,height=10)
 
-email_entry.grid(row=0,column=1,padx=5,pady=5)
-teema_entry.grid(row=1,column=1,padx=5,pady=5)
-manus_entry.grid(row=2,column=1,padx=5,pady=5)
-kiri_text.grid(row=3,column=1,padx=5,pady=5)
+aken = tk.Tk()
+aken.title("Telefoniraamat")
+# Sisestusväljad
+otsingu_viide = tk.StringVar()
+otsingu_viide.set("")
+tk.Label(aken, text="Nimi:").pack()
+nimi_entry = tk.Entry(aken)
+nimi_entry.pack()
 
-lisa_btn = tk.Button(aken, text="LISA PILT", bg="darkgreen", fg="white", command=lambda: lisa_manus(manus_entry))
-saada_btn = tk.Button(aken, text="SAADA", bg="darkgreen", fg="white", command=saada_kiri)
+tk.Label(aken, text="Telefon:").pack()
+telefon_entry = tk.Entry(aken)
+telefon_entry.pack()
 
-lisa_btn.grid(row=4, column=0, pady=10)
-saada_btn.grid(row=4, column=1, sticky='e', padx=10)
+tk.Label(aken, text="Email:").pack()
+email_entry = tk.Entry(aken)
+email_entry.pack()
 
-aken.mainloop()
+nuppude_rida = tk.Frame(aken)
+nuppude_rida.pack(pady=5)
 
-#8 email
-import tkinter as tk
-from tkinter import filedialog
-import smtplib
-from email.message import EmailMessage
-import os
-
-aken=tk.Tk()
-aken.title("E-kirja emaili saatmine")
-aken.geometry("500x325")
-aken.configure(bg="white")
-
-tk.Label(aken,text="Email:",bg="green",fg="white",width=10).grid(row=0,column=0,sticky="nsew")
-tk.Label(aken,text="Teema:",bg="green",fg="white",width=10).grid(row=1,column=0,sticky="nsew")
-tk.Label(aken,text="Lisa:",bg="green",fg="white",width=10).grid(row=2,column=0,sticky="nsew")
-tk.Label(aken,text="Kiri:",bg="green",fg="white",width=10).grid(row=3,column=0,sticky="nsew")
-
-email_entry=tk.Entry(aken,width=50)
-teema_entry=tk.Entry(aken,width=50)
-manus_entry=tk.Entry(aken,width=50)
-kiri_text=tk.Text(aken,width=40,height=10)
-
-email_entry.grid(row=0,column=1,padx=5,pady=5)
-teema_entry.grid(row=1,column=1,padx=5,pady=5)
-manus_entry.grid(row=2,column=1,padx=5,pady=5)
-kiri_text.grid(row=3,column=1,padx=5,pady=5)
-
-lisa_btn = tk.Button(aken, text="Vali fail", bg="green", fg="white", command=lambda: lisa_manus(manus_entry))
-#saada_btn = tk.Button(aken, text="Saada", bg="green", fg="white", command=saada_kiri)
-
-lisa_btn.grid(row=4, column=0, pady=10)
-#saada_btn.grid(row=4, column=1, sticky='e', padx=10)
-
+tk.Button(nuppude_rida, text="Lisa kontakt", command=lisa_kontakt).pack(side="left",pady=5)
+tk.Button(nuppude_rida, text="Kuva kontaktid", command=kuva_kontaktid).pack(side="left")
+tk.Button(nuppude_rida, text="Otsi kontakti", command=otsi_kontakti_gui).pack(side="left")
+tk.Button(nuppude_rida, text="Kustuta kontakt", command=kustuta_kontakt_gui).pack(side="left")
+tk.Button(nuppude_rida, text="Sorteeri (nime järgi)", command=sorteeri_gui).pack(side="left")
+tk.Button(nuppude_rida, text="Muuda kontakt", command=muuda_kontakt_gui).pack(side="left")
+tk.Button(nuppude_rida, text="Lisa fail", command=lisa_fail_gui).pack(side="left")
+tekstikast = tk.Text(aken, height=10, width=50)
+tekstikast.pack(pady=10)
 
 aken.mainloop()
